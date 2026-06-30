@@ -1,6 +1,6 @@
 # /ai-overview — AI-search citation tracker
 
-A [Claude Code](https://claude.com/claude-code) **skill + agent** that captures *who AI search engines cite* — across **Google AI Overviews** and **ChatGPT web search** — for a list of prompts, then builds a citation-position competitive matrix (Excel + raw JSON + an on-screen leaderboard). Generic for any topic; the tracked brand defaults to `policybazaar.ae`.
+A [Claude Code](https://claude.com/claude-code) **skill + agent** that captures *who AI search engines cite* — across **Google AI Overviews** and **ChatGPT web search** — for a list of prompts, then builds a citation-position competitive matrix (Excel + raw JSON + an on-screen leaderboard). Generic for any topic; the tracked brand is set by the **business unit** you pick — `policybazaar.ae` (insurance / investment) or `paisabazaar.ae` (credit / lending / banking).
 
 > **What "position" means:** the order a domain appears in the answer's cited-sources list (1 = first cited) — the closest proxy these AI surfaces expose. It is **not** a classic blue-link SERP rank.
 
@@ -129,10 +129,11 @@ claude mcp list
 ## Usage
 
 Run **`/ai-overview`**. It asks, in order:
-1. **Topic** to track (e.g. *Health Insurance*).
-2. **Provide your own prompts**, or have it **generate** ~50 across intent buckets.
-3. **Engine(s):** Google AI Overview, ChatGPT, or both (defaults to Google AIO).
-4. **Region** (defaults to UAE / English: `google.ae`, `gl=ae`, `hl=en`).
+1. **Business unit** — sets the tracked brand. e.g. *Credit Card / Personal Loan / Bank Account / Credit Score / Car Loan / Home Loan* → `paisabazaar.ae`; *Car / Term / Health / Travel / Business / Home / Group Insurance & Investment* → `policybazaar.ae`.
+2. **Topic** to track (defaults to the chosen unit's name; accepts a narrower angle).
+3. **Provide your own prompts**, or have it **generate** ~50 across intent buckets.
+4. **Engine(s):** Google AI Overview, ChatGPT, or both (defaults to Google AIO).
+5. **Region** (defaults to UAE / English: `google.ae`, `gl=ae`, `hl=en`).
 
 For the **ChatGPT** engine, open Chrome and sign in to chatgpt.com first — it scrapes your logged-in session and is slower and more block-prone than Google.
 

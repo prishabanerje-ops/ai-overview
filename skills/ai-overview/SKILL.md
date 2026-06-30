@@ -5,17 +5,37 @@ description: Scrape AI-search citations for a set of prompts and produce a citat
 
 # /ai-overview — AI-search citation tracker (Google AI Overview + ChatGPT)
 
-Capture AI-search answers for many prompts, then show **who the AI cites and in what order** — so a brand can see its visibility gap. Generic for any topic; tracked brand defaults to **policybazaar.ae**.
+Capture AI-search answers for many prompts, then show **who the AI cites and in what order** — so a brand can see its visibility gap. Generic for any topic; the **tracked brand is set by the chosen business unit** — `policybazaar.ae` or `paisabazaar.ae` (mapping in step 1).
 
 The scripts and the scraper agent do the heavy lifting. This file is the orchestration.
 
 ## Ask these questions IN ORDER, then act
-1. **"What topic do you want to track?"** (e.g. *Health Insurance*)
-2. **"Will you (1) provide the prompts yourself, or (2) should I generate them from the topic?"**
-3. **"Which engine(s): (1) Google AI Overview, (2) ChatGPT, or (3) both?"** Default to **Google AI Overview** if unstated.
-4. Region: assume **UAE / English** (`google.ae`, `gl=ae`, `hl=en`) unless the user says otherwise or named a different market in step 1. Only ask if genuinely ambiguous.
+1. **"Which business unit are we tracking?"** — ALWAYS ask this first and show the table below. The unit the user picks sets the **tracked brand** (`$BRAND`) for the whole run and is the default topic.
 
-Optional overrides the user may state anytime — honor silently: prompt count (default **50** when generating), a different brand, region, or output folder.
+   | Business unit | Tracked brand |
+   |---|---|
+   | Credit Card | `paisabazaar.ae` |
+   | Personal Loan | `paisabazaar.ae` |
+   | Bank Account | `paisabazaar.ae` |
+   | Credit Score | `paisabazaar.ae` |
+   | Car Loan | `paisabazaar.ae` |
+   | Home Loan | `paisabazaar.ae` |
+   | Car Insurance | `policybazaar.ae` |
+   | Term Insurance | `policybazaar.ae` |
+   | Health Insurance | `policybazaar.ae` |
+   | Travel Insurance | `policybazaar.ae` |
+   | Business Insurance | `policybazaar.ae` |
+   | Investment | `policybazaar.ae` |
+   | Home Insurance | `policybazaar.ae` |
+   | Group Insurance | `policybazaar.ae` |
+
+   Rule of thumb if the user names something off-list: **credit / loan / banking / score** products → `paisabazaar.ae`; **insurance / investment** products → `policybazaar.ae`. If still ambiguous, ask which of the two brands to track (don't silently default).
+2. **"What topic do you want to track?"** — default to the chosen unit's name (e.g. *Health Insurance*); accept a narrower angle if the user gives one.
+3. **"Will you (1) provide the prompts yourself, or (2) should I generate them from the topic?"**
+4. **"Which engine(s): (1) Google AI Overview, (2) ChatGPT, or (3) both?"** Default to **Google AI Overview** if unstated.
+5. Region: assume **UAE / English** (`google.ae`, `gl=ae`, `hl=en`) unless the user says otherwise or named a different market. Only ask if genuinely ambiguous.
+
+Optional overrides the user may state anytime — honor silently: prompt count (default **50** when generating), a **different brand** (overrides the unit mapping for `$BRAND`), region, or output folder.
 
 **If ChatGPT is selected, say this up front:** ChatGPT scraping uses the **Chrome DevTools engine and your logged-in chatgpt.com session** — make sure you're signed into ChatGPT in Chrome. It's **slow and block-prone** (Cloudflare/login can stop it), and many prompts will legitimately return **no sources** (ChatGPT only cites when it actually web-searches). This is the fragile path; Google AI Overview is the reliable one.
 
@@ -34,7 +54,7 @@ Generate **~50** distinct, natural prompts across intent buckets so the analysis
 Adapt buckets to the topic. Then **scrape immediately — no approval step** (user's chosen default). Show the generated list as you start so they can interrupt if it's off-target.
 
 ## Scrape — dispatch the ai-overview-scraper agent (once per selected engine)
-Resolve this skill's base directory (announced when the skill loads) as `$SKILL`. Pick `$WORK` (current dir unless the user named one) and today's date (`date +%F`). For **each** selected engine, dispatch the **ai-overview-scraper** agent with: engine (`google` or `chatgpt`), the full prompt list, region, brand (default `policybazaar.ae`), the topic, and:
+Resolve this skill's base directory (announced when the skill loads) as `$SKILL`. Pick `$WORK` (current dir unless the user named one) and today's date (`date +%F`). For **each** selected engine, dispatch the **ai-overview-scraper** agent with: engine (`google` or `chatgpt`), the full prompt list, region, brand (`$BRAND` — the chosen unit's brand, `paisabazaar.ae` or `policybazaar.ae`), the topic, and:
 - google → `extract_fn_path` = `$SKILL/scripts/extract_aio.js`, `out_path` = `$WORK/aio_<slug>_<date>__google.json`
 - chatgpt → `extract_fn_path` = `$SKILL/scripts/extract_chatgpt.js`, `out_path` = `$WORK/aio_<slug>_<date>__chatgpt.json`
 
@@ -45,9 +65,9 @@ Pass each engine's dataset as a `Label=path` pair:
 ```bash
 python3 "$SKILL/scripts/build_matrix.py" \
   --data "Google AIO=$WORK/aio_<slug>_<date>__google.json" "ChatGPT=$WORK/aio_<slug>_<date>__chatgpt.json" \
-  --out "$WORK/AIO_<slug>_<date>.xlsx" --brand policybazaar.ae --min-prompts 2
+  --out "$WORK/AIO_<slug>_<date>.xlsx" --brand "$BRAND" --min-prompts 2
 ```
-(Only include the engines you actually scraped.) Each engine gets a positions matrix sheet + a verbatim-text sheet; columns = domains cited in ≥2 prompts ranked by frequency; brand highlighted; NA = not cited; "cited in" + "avg position" summary rows. The script prints per-engine leaderboards + a cross-engine brand line. Copy the `.xlsx` to `~/Downloads/`.
+(`$BRAND` is the chosen unit's brand — `paisabazaar.ae` or `policybazaar.ae`. Only include the engines you actually scraped.) Each engine gets a positions matrix sheet + a verbatim-text sheet; columns = domains cited in ≥2 prompts ranked by frequency; brand highlighted; NA = not cited; "cited in" + "avg position" summary rows. The script prints per-engine leaderboards + a cross-engine brand line. Copy the `.xlsx` to `~/Downloads/`.
 
 ## Present
 - engine(s) used + coverage per engine (e.g. "Google: 48/50 had an Overview, 0 blocks; ChatGPT: 31/50 answered, 18 cited sources, stopped by a login wall at #32"),
