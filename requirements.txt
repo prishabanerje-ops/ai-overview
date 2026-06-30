@@ -1,0 +1,3 @@
+# Python dependency for skills/ai-overview/scripts/build_matrix.py
+# Everything else build_matrix.py uses is the Python standard library.
+openpyxl>=3.1
